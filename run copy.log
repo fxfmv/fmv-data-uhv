@@ -1,0 +1,57 @@
+Scenario: scenario_tse1.json
+Base URL: https://fmvtsenergyqual.net.fmv.ch:15230/api
+
+[1] Lister les caches disposibles
+GET https://fmvtsenergyqual.net.fmv.ch:15230/api/data/caches
+Status: 200
+{
+  "caches": [
+    "default",
+    "default_result",
+    "fx_cache",
+    "fx_cache2",
+    "TestAndrea",
+    "TestAndrea_result",
+    "test_cache",
+    "test_cache_result"
+  ]
+}
+Variable sauvegardee: $cache_name=TestAndrea
+
+[2] Lister les timeseries du cache
+GET https://fmvtsenergyqual.net.fmv.ch:15230/api/data/caches/TestAndrea/timeseries
+Status: 200
+{
+  "keys": [
+    {
+      "object_type": "UNIVERSE_UNDERLYING",
+      "series_class": "CUSTOM_VALUE",
+      "master_id": "PFCTestRest",
+      "parent_id": ""
+    }
+  ]
+}
+Variable sauvegardee: $timeserie_key=PFCTestRest
+
+[3] Explorer les données contenues dans la timeserie
+GET https://fmvtsenergyqual.net.fmv.ch:15230/api/data/caches/TestAndrea/underlyings/PFCTestRest/timeseries/value
+Status: 200
+{
+  "records": [
+    {
+      "timestamp": "2025-03-21T12:00:00Z",
+      "value": 1
+    },
+    {
+      "timestamp": "2025-03-21T12:15:00Z",
+      "value": 2
+    },
+    {
+      "timestamp": "2025-03-21T12:30:00Z",
+      "value": 3
+    }
+  ]
+}
+Variable sauvegardee: $timeserie_key=[{'timestamp': '2025-03-21T12:00:00Z', 'value': 1}, {'timestamp': '2025-03-21T12:15:00Z', 'value': 2}, {'timestamp': '2025-03-21T12:30:00Z', 'value': 3}]
+
+Scenario termine.

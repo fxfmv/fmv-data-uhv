@@ -1,0 +1,112 @@
+{
+  "base_url": "https://fmvtsenergyqual.net.fmv.ch:15230/api",
+  "variables": {
+    "cache_name": "TestAndrea",
+    "storage_name": "1ere DIXENCE TestRest",
+    "timeserie_key_to_import": "PFCTestRest",
+    "timeserie_input": [
+      {
+        "timestamp": "2025-03-21T12:00:00Z",
+        "value": 1
+      },
+      {
+        "timestamp": "2025-03-21T12:15:00Z",
+        "value": 2
+      },
+      {
+        "timestamp": "2025-03-21T12:30:00Z",
+        "value": 3
+      },
+      {
+        "timestamp": "2025-03-21T12:45:00Z",
+        "value": 6
+      },
+      {
+        "timestamp": "2025-03-21T13:00:00Z",
+        "value": 6
+      },
+      {
+        "timestamp": "2025-03-21T13:15:00Z",
+        "value": 6
+      },
+      {
+        "timestamp": "2025-03-21T13:30:00Z",
+        "value": 5
+      },
+      {
+        "timestamp": "2025-03-21T13:45:00Z",
+        "value": 3
+      },
+      {
+        "timestamp": "2025-03-21T14:00:00Z",
+        "value": 1
+      }
+    ]
+  },
+  "steps": [
+    {
+      "name": "Supprimer le cache si il existe",
+      "method": "DELETE",
+      "path": "/data/caches/$cache_name",
+      "expect_status": [200, 204]
+    },
+    {
+      "name": "Insérer les données dans la timeserie",
+      "method": "POST",
+      "path": "/data/caches/$cache_name/underlyings/$timeserie_key_to_import/timeseries/value",
+      "body": {
+        "records": "$timeserie_input"
+      },
+      "expect_status": 200,
+      "save": {
+        "records": "records"
+      }
+    },
+    {
+      "name": "Lister les caches disposibles",
+      "method": "GET",
+      "path": "/data/caches",
+      "expect_status": 200,
+      "save": {
+        "cache_name2": "caches.4"
+      }
+    },
+    {
+      "name": "Lister les timeseries du cache",
+      "method": "GET",
+      "path": "/data/caches/$cache_name/timeseries",
+      "expect_status": 200,
+       "save": {
+        "timeserie_key": "keys.0.master_id"
+      }
+    },
+      {
+      "name": "Explorer les données contenues dans la timeserie",
+      "method": "GET",
+      "path": "/data/caches/$cache_name/underlyings/$timeserie_key/timeseries/value",
+      "expect_status": 200,
+      "save": {
+        "records": "records"
+      }
+    }, 
+    {
+      "name": "Récupérer le storage utilsé pour les résultats de la cache",
+      "method": "GET",
+      "path": "/model-ml/storages",
+      "expect_status": 200,
+      "save": {
+        "records": "records"
+      }
+    },
+      {
+      "name": "Explorer les résultats contenus dans la timerserie",
+      "method": "GET",
+      "path": "/data/caches-results/$cache_name/storages/$storage_name/timeseries/volume",
+      "expect_status": 200,
+      "save": {
+        "records": "records"
+      }
+    }
+    
+  ]
+}

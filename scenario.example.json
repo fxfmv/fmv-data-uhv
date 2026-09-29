@@ -1,0 +1,38 @@
+{
+  "base_url": "https://fmvtsenergyqual.net.fmv.ch:15230/api",
+  "variables": {
+    "name": "TSE"
+  },
+  "steps": [
+    {
+      "name": "Lister les caches disposibles",
+      "method": "GET",
+      "path": "/data/caches",
+      "expect_status": 200
+    },
+    {
+      "name": "Creer une ressource",
+      "method": "POST",
+      "path": "/items",
+      "body": {
+        "name": "$name"
+      },
+      "expect_status": 201,
+      "save": {
+        "item_id": "id"
+      }
+    },
+    {
+      "name": "Lire la ressource creee",
+      "method": "GET",
+      "path": "/items/$item_id",
+      "expect_status": 200
+    },
+    {
+      "name": "Supprimer la ressource",
+      "method": "DELETE",
+      "path": "/items/$item_id",
+      "expect_status": 204
+    }
+  ]
+}
