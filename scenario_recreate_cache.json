@@ -88,24 +88,6 @@
       "save": {
         "records": "records"
       }
-    }, 
-    {
-      "name": "Récupérer le storage utilsé pour les résultats de la cache",
-      "method": "GET",
-      "path": "/model-ml/storages",
-      "expect_status": 200,
-      "save": {
-        "records": "records"
-      }
-    },
-      {
-      "name": "Explorer les résultats contenus dans la timerserie",
-      "method": "GET",
-      "path": "/data/caches-results/$cache_name/storages/$storage_name/timeseries/volume",
-      "expect_status": 200,
-      "save": {
-        "records": "records"
-      }
     }
     
   ]

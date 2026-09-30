@@ -1,4 +1,4 @@
-Scenario: scenario_tse1.json
+Scenario: scenario_get_cache_results.json
 Base URL: https://fmvtsenergyqual.net.fmv.ch:15230/api
 
 [1] Récupérer le storage utilsé pour les résultats de la cache

@@ -1,10 +1,14 @@
 import argparse
 import json
 import sys
+from pathlib import Path
 from string import Template
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
+
+
+SCRIPT_DIR = Path(__file__).resolve().parent
 
 
 def build_url(base_url, path):
@@ -16,6 +20,54 @@ def build_url(base_url, path):
 def load_json(path):
     with open(path, "r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def list_scenarios(directory=None):
+    base_dir = Path(directory) if directory else SCRIPT_DIR
+    return sorted(
+        [path for path in base_dir.iterdir() if path.is_file() and path.suffix.lower() == ".json"],
+        key=lambda path: path.name.lower(),
+    )
+
+
+def resolve_scenario_path(path_value):
+    if not path_value:
+        return None
+
+    candidate = Path(path_value)
+    if not candidate.is_absolute():
+        candidate = SCRIPT_DIR / candidate
+    return candidate
+
+
+def prompt_for_scenario():
+    scenarios = list_scenarios()
+    if not scenarios:
+        raise FileNotFoundError("Aucun fichier JSON de scenario trouve dans le dossier du projet.")
+
+    print("Scenarios disponibles :")
+    for index, path in enumerate(scenarios, start=1):
+        print(f"  {index}. {path.name}")
+
+    while True:
+        try:
+            raw = input(f"Choisissez un scenario (1-{len(scenarios)} ou nom de fichier) [1]: ").strip()
+        except EOFError:
+            raw = "1"
+
+        chosen = "1" if not raw else raw
+
+        if chosen.isdigit():
+            index = int(chosen)
+            if 1 <= index <= len(scenarios):
+                return scenarios[index - 1]
+        else:
+            normalized = Path(chosen).name.lower()
+            match = next((path for path in scenarios if path.name.lower() == normalized), None)
+            if match:
+                return match
+
+        print("Choix invalide. Merci de taper un numero ou un nom de fichier valide.", file=sys.stderr)
 
 
 def render(value, variables):
@@ -96,10 +148,22 @@ def get_value(data, dotted_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Execute un scenario simple d'appels API.")
-    parser.add_argument("scenario", nargs="?", default="scenario_tse1.json")
+    parser.add_argument("scenario", nargs="?", help="Chemin du fichier JSON du scenario. Si omis, la liste des scenarios est affichee et tu choisis celui a lancer.")
     args = parser.parse_args()
 
-    scenario = load_json(args.scenario)
+    scenario_path = resolve_scenario_path(args.scenario)
+    if scenario_path is None:
+        scenario_path = prompt_for_scenario()
+
+    try:
+        scenario = load_json(scenario_path)
+    except FileNotFoundError:
+        print(f"Erreur: fichier de scenario introuvable: {scenario_path}", file=sys.stderr)
+        return 1
+    except json.JSONDecodeError as exc:
+        print(f"Erreur: fichier JSON invalide: {scenario_path} ({exc})", file=sys.stderr)
+        return 1
+
     base_url = scenario.get("base_url")
     if not base_url:
         print("Erreur: definir base_url dans le scenario.", file=sys.stderr)
@@ -108,7 +172,7 @@ def main():
     variables = scenario.get("variables", {})
 
     with open("run.log", "w", encoding="utf-8") as log:
-        log.write(f"Scenario: {args.scenario}\n")
+        log.write(f"Scenario: {scenario_path.name}\n")
         log.write(f"Base URL: {base_url}\n")
 
     for index, step in enumerate(scenario["steps"], start=1):
