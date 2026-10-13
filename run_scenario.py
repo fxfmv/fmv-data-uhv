@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 from string import Template
 from urllib.error import HTTPError, URLError
@@ -179,7 +180,25 @@ def main():
         name = step.get("name", f"step {index}")
         print(f"\n[{index}] {name}")
 
-        url, status, response = call_api(base_url, step, variables)
+        retries = int(step.get("retries", 0))
+        retry_delay_seconds = float(step.get("retry_delay_seconds", 1))
+        retry_statuses = step.get("retry_statuses", [])
+        if isinstance(retry_statuses, int):
+            retry_statuses = [retry_statuses]
+
+        for attempt in range(retries + 1):
+            url, status, response = call_api(base_url, step, variables)
+            if status not in retry_statuses or attempt == retries:
+                break
+            print(f"Status: {status} - nouvel essai dans {retry_delay_seconds:g}s ({attempt + 1}/{retries})")
+            with open("run.log", "a", encoding="utf-8") as log:
+                log.write(f"\n[{index}] {name} - tentative {attempt + 1}\n")
+                log.write(f"{step.get('method', 'GET').upper()} {url}\n")
+                log.write(f"Status: {status} - retry dans {retry_delay_seconds:g}s\n")
+                log.write(json.dumps(response, indent=2, ensure_ascii=False))
+                log.write("\n")
+            time.sleep(retry_delay_seconds)
+
         print(f"Status: {status}")
         print(json.dumps(response, indent=2, ensure_ascii=False))
 

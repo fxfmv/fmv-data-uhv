@@ -46,22 +46,31 @@
   "steps": [
     
     {
-      "name": "Récupérer le storage utilsé pour les résultats de la cache",
-      "method": "GET",
-      "path": "/model-ml/storages",
+      "name": "Enregistrer le cache dans un snapshot",
+      "method": "POST",
+      "path": "/data/universes/$cache_name",
       "expect_status": 200,
       "save": {
-        "records": "records"
+        "universe_id": "universeId"
       }
     },
-      {
-      "name": "Explorer les résultats contenus dans la timerserie",
+     {
+      "name": "Récupérer les données d'entrée depuis le snapshot",
       "method": "GET",
-      "path": "/data/caches-results/$cache_name/storages/$storage_name/timeseries/volume",
+      "path": "/data/universes/$universe_id/underlyings/$timeserie_key_to_import/timeseries/value",
       "expect_status": 200,
-      "save": {
-        "records": "records"
-      }
+      "retry_statuses": [404],
+      "retries": 10,
+      "retry_delay_seconds": 2
+    },
+    {
+      "name": "Récupérer les données de résultat depuis le snapshot",
+      "method": "GET",
+      "path": "/data/universe-results/$universe_id/storages/$storage_name/timeseries/volume",
+      "expect_status": 200,
+      "retry_statuses": [404],
+      "retries": 10,
+      "retry_delay_seconds": 2
     }
     
   ]
